@@ -1,11 +1,8 @@
-import cv2 as cv
+import os
 import tracker
 
 # Define Hotspots
-hotspot1 = tracker.Hotspot((0, 0), (150, 150))
+hotspot1 = tracker.Hotspot((0, 0), (150, 150), os.getcwd() + "/test.mkv")
 
-colour_tracker = tracker.Tracker(0, hotspots=[hotspot1])
-
-cv.namedWindow("preview")
-colour_tracker.start("preview")
-cv.destroyWindow("preview")
+colour_tracker = tracker.Tracker(hotspots=[hotspot1])
+colour_tracker.start()

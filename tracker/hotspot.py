@@ -1,9 +1,10 @@
 class Hotspot:
     """Hotspot thingy"""
 
-    def __init__(self, p1, p2):
+    def __init__(self, p1, p2, filename):
         self.minx, self.maxx = sorted([p1[0], p2[0]])
         self.miny, self.maxy = sorted([p1[1], p2[1]])
+        self.filename = filename
 
     def check(self, point):
         x, y = point

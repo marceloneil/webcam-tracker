@@ -1,34 +1,65 @@
 import cv2 as cv
 import numpy as np
+import time
 
 
 class Tracker:
     """Video tracker"""
 
-    def __init__(self, webcam_index, hotspots=[]):
-        self.video = cv.VideoCapture(webcam_index)
+    def __init__(self, src=0, windows=["preview"], hotspots=[]):
+        self.video = cv.VideoCapture(src)
         self.height = self.video.get(cv.CAP_PROP_FRAME_HEIGHT)
         self.width = self.video.get(cv.CAP_PROP_FRAME_WIDTH)
+        self.windows = windows
         self.hotspots = hotspots
+        self.time = 0
 
-    def start(self, window):
-        cv.setMouseCallback(window, self.on_click)
+        for window in self.windows:
+            cv.namedWindow("preview")
+
+    def start(self):
+        cv.setMouseCallback(self.windows[0], self.on_click)
         if self.video.isOpened():  # try to get the first frame
             rval, frame = self.video.read()
+            frame = cv.flip(frame, 1)
         else:
             rval = False
 
         while rval:
             if hasattr(self, 'colour'):
                 point = self.closest_point(self.colour, frame)
-                colour = (0, 255, 0)
-                for hotspot in self.hotspots:
-                    if hotspot.check(point):
-                        colour = (255, 0, 0)
-                frame = cv.circle(frame, point, 20, colour, thickness=10)
-            cv.imshow(window, frame)
+                frame = cv.circle(frame, point, 20, (0, 255, 0), thickness=10)
+                if time.time() - self.time > 5:
+                    for hotspot in self.hotspots:
+                        if hotspot.check(point):
+                            self.play_video(hotspot.filename)
+                            # Hack to keep the video from playing instantly
+                            self.time = time.time()
+            for window in self.windows:
+                cv.imshow(window, frame)
             rval, frame = self.video.read()
             frame = cv.flip(frame, 1)
+            key = cv.waitKey(20)
+            if key == 27:  # exit on ESC
+                self.stop()
+                break
+
+    def stop(self):
+        for window in self.windows:
+            cv.destroyWindow(window)
+
+    def play_video(self, filename):
+        video = cv.VideoCapture(filename)
+
+        if video.isOpened():
+            rval, frame = video.read()
+        else:
+            rval = False
+
+        while rval:
+            cv.imshow(self.windows[0], frame)
+            rval, frame = video.read()
+
             key = cv.waitKey(20)
             if key == 27:  # exit on ESC
                 break
